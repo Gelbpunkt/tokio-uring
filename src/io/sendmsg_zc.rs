@@ -3,6 +3,7 @@ use crate::io::SharedFd;
 use crate::runtime::driver::op::{Completable, CqeResult, MultiCQEFuture, Op, Updateable};
 use crate::runtime::CONTEXT;
 use socket2::SockAddr;
+use std::convert::TryInto;
 use std::io;
 use std::io::IoSlice;
 use std::net::SocketAddr;
@@ -62,11 +63,11 @@ impl<T: BoundedBuf, U: BoundedBuf> Op<SendMsgZc<T, U>, MultiCQEFuture> {
         match msg_control {
             Some(ref _msg_control) => {
                 msghdr.msg_control = _msg_control.stable_ptr() as *mut _;
-                msghdr.msg_controllen = _msg_control.bytes_init();
+                msghdr.msg_controllen = _msg_control.bytes_init().try_into().unwrap();
             }
             None => {
                 msghdr.msg_control = std::ptr::null_mut();
-                msghdr.msg_controllen = 0_usize;
+                msghdr.msg_controllen = 0;
             }
         }
 
